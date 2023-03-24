@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "alpaca-lora"
+version = "0.1.0"
+description = ""
+authors = ["watsonchua <watsonchua@gmail.com>"]
+readme = "README.md"
+packages = [{include = "alpaca_lora"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+datasets = "*"
+loralib = "*"
+sentencepiece = "*"
+accelerate = "*"
+bitsandbytes = "*"
+gradio = "*"
+transformers = {git = "https://github.com/huggingface/transformers.git"}
+peft = {git = "https://github.com/huggingface/peft.git"}
+torch = "1.13.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

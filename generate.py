@@ -2,6 +2,14 @@ import torch
 from peft import PeftModel
 import transformers
 import gradio as gr
+import logging
+# logging.basicConfig(filename='output.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(handlers=[logging.FileHandler(filename="./output.log", 
+                                                 encoding='utf-8', mode='a+')],
+                    format="%(asctime)s %(name)s:%(levelname)s:%(message)s", 
+                    datefmt="%F %A %T", 
+                    level=logging.DEBUG)
+
 
 assert (
     "LlamaTokenizer" in transformers._import_structure["models.llama"]
@@ -46,14 +54,14 @@ model.eval()
 
 def evaluate(
         instruction,
-        input=None,
+        input_text=None,
         temperature=0.1,
         top_p=0.75,
         top_k=40,
         num_beams=4,
         **kwargs,
 ):
-    prompt = generate_prompt(instruction, input)
+    prompt = generate_prompt(instruction, input_text)
     inputs = tokenizer(prompt, return_tensors="pt")
     input_ids = inputs["input_ids"].cuda()
     generation_config = GenerationConfig(
@@ -69,10 +77,21 @@ def evaluate(
             generation_config=generation_config,
             return_dict_in_generate=True,
             output_scores=True,
-            max_new_tokens=2048,
+            # max_new_tokens=2048,
+            max_new_tokens=1024
         )
     s = generation_output.sequences[0]
     output = tokenizer.decode(s)
+    
+    log_output = 'Prompt: ' + str(prompt) + \
+    '------------------------------------------------\n\n' + \
+    'Input: ' + str(input_text) + \
+    '------------------------------------------------\n\n' + \
+    'Output: ' + str(output) + \
+    '------------------------------------------------\n\n'
+    
+    logging.debug(log_output)
+    print(log_output)
     return output.split("### Response:")[1].strip()
 
 
@@ -80,10 +99,10 @@ gr.Interface(
     fn=evaluate,
     inputs=[
         gr.components.Textbox(
-            lines=2, label="Instruction", placeholder="Tell me about alpacas."
+            lines=2, label="Instruction", value="Answer the following question using the context. If you don't know, say I don't know. Context: \"Watson is a data scientist from GovTech Singapore. He works in the Data Science and Artificial Intelligence Division, specialising in NLP.\""
         ),
         gr.components.Textbox(
-            lines=2, label="Input", placeholder="none"
+            lines=2, label="Input", value="Question: \"Where does Watson work in?\""
         ),
         gr.components.Slider(minimum=0, maximum=1, value=0.1, label="Temperature"),
         gr.components.Slider(minimum=0, maximum=1, value=0.75, label="Top p"),
@@ -96,9 +115,9 @@ gr.Interface(
             label="Output",
         )
     ],
-    title="🦙🌲 Alpaca-LoRA",
-    description="Alpaca-LoRA is a 7B-parameter LLaMA model finetuned to follow instructions. It is trained on the [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) dataset and makes use of the Huggingface LLaMA implementation. For more information, please visit [the project's website](https://github.com/tloen/alpaca-lora).",
-).launch(share=True)
+    title="DSAID's 🦙🌲 Alpaca-LoRA",
+    description="This is DSAID's implementation of Alpaca-LoRA. Alpaca-LoRA is a 7B-parameter LLaMA model finetuned to follow instructions. It is trained on the [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) dataset and makes use of the Huggingface LLaMA implementation.",
+).launch(share=True, server_name="0.0.0.0")
 
 # Old testing code follows.
 
