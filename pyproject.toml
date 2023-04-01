@@ -17,6 +17,7 @@ gradio = "*"
 transformers = {git = "https://github.com/huggingface/transformers.git"}
 peft = {git = "https://github.com/huggingface/peft.git"}
 torch = "1.13.1"
+fire = "^0.5.0"
 
 
 [build-system]
