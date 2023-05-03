@@ -25,7 +25,8 @@ except:  # noqa: E722
 def main(
     load_8bit: bool = False,
     base_model: str = "decapoda-research/llama-7b-hf",
-    lora_weights: str = "./loara-alpaca-im8-clauses",
+    # lora_weights: str = "./lora-alpaca-im8-clauses",
+    lora_weights: str = "./lora-alpaca-im8-qa",
     prompt_template: str = "",  # The prompt template to use, will default to alpaca.
     server_name: str = "0.0.0.0",  # Allows to listen on all interfaces by providing '0.
     share_gradio: bool = False,
@@ -43,11 +44,14 @@ def main(
             load_in_8bit=load_8bit,
             torch_dtype=torch.float16,
             device_map="auto",
+            # offload_folder="."
+            # low_cpu_mem_usage=True # added on to prevent offload_dir error
         )
         model = PeftModel.from_pretrained(
             model,
             lora_weights,
             torch_dtype=torch.float16,
+            # offload_dir=""
         )
     elif device == "mps":
         model = LlamaForCausalLM.from_pretrained(
@@ -115,57 +119,60 @@ def main(
         output = tokenizer.decode(s)
         return prompter.get_response(output)
 
-    # gr.Interface(
-    #     fn=evaluate,
-    #     inputs=[
-    #         gr.components.Textbox(
-    #             lines=2,
-    #             label="Instruction",
-    #             placeholder="Tell me about alpacas.",
-    #         ),
-    #         gr.components.Textbox(lines=2, label="Input", placeholder="none"),
-    #         gr.components.Slider(
-    #             minimum=0, maximum=1, value=0.1, label="Temperature"
-    #         ),
-    #         gr.components.Slider(
-    #             minimum=0, maximum=1, value=0.75, label="Top p"
-    #         ),
-    #         gr.components.Slider(
-    #             minimum=0, maximum=100, step=1, value=40, label="Top k"
-    #         ),
-    #         gr.components.Slider(
-    #             minimum=1, maximum=4, step=1, value=4, label="Beams"
-    #         ),
-    #         gr.components.Slider(
-    #             minimum=1, maximum=2000, step=1, value=128, label="Max tokens"
-    #         ),
-    #     ],
-    #     outputs=[
-    #         gr.inputs.Textbox(
-    #             lines=5,
-    #             label="Output",
-    #         )
-    #     ],
-    #     title="🦙🌲 Alpaca-LoRA",
-    #     description="Alpaca-LoRA is a 7B-parameter LLaMA model finetuned to follow instructions. It is trained on the [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) dataset and makes use of the Huggingface LLaMA implementation. For more information, please visit [the project's website](https://github.com/tloen/alpaca-lora).",  # noqa: E501
-    # ).launch(server_name="0.0.0.0", share=share_gradio)
+    gr.Interface(
+        fn=evaluate,
+        inputs=[
+            gr.components.Textbox(
+                lines=2,
+                label="Instruction",
+                placeholder="Tell me about alpacas.",
+            ),
+            gr.components.Textbox(lines=2, label="Input", placeholder="none"),
+            gr.components.Slider(
+                minimum=0, maximum=1, value=0.1, label="Temperature"
+            ),
+            gr.components.Slider(
+                minimum=0, maximum=1, value=0.75, label="Top p"
+            ),
+            gr.components.Slider(
+                minimum=0, maximum=100, step=1, value=40, label="Top k"
+            ),
+            gr.components.Slider(
+                minimum=1, maximum=4, step=1, value=4, label="Beams"
+            ),
+            gr.components.Slider(
+                minimum=1, maximum=2000, step=1, value=128, label="Max tokens"
+            ),
+        ],
+        outputs=[
+            gr.inputs.Textbox(
+                lines=5,
+                label="Output",
+            )
+        ],
+        title="🦙🌲 Alpaca-LoRA",
+        description="Alpaca-LoRA is a 7B-parameter LLaMA model finetuned to follow instructions. It is trained on the [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) dataset and makes use of the Huggingface LLaMA implementation. For more information, please visit [the project's website](https://github.com/tloen/alpaca-lora).",  # noqa: E501
+    ).launch(server_name=server_name, share=share_gradio)
     # Old testing code follows.
 
-    # testing code for readme
-    for instruction in [
-        "Tell me about alpacas.",
-        "Tell me about the president of Mexico in 2019.",
-        "Tell me about the king of France in 2019.",
-        "List all Canadian provinces in alphabetical order.",
-        "Write a Python program that prints the first 10 Fibonacci numbers.",
-        "Write a program that prints the numbers from 1 to 100. But for multiples of three print 'Fizz' instead of the number and for the multiples of five print 'Buzz'. For numbers which are multiples of both three and five print 'FizzBuzz'.",  # noqa: E501
-        "Tell me five words that rhyme with 'shock'.",
-        "Translate the sentence 'I have no mouth but I must scream' into Spanish.",
-        "Count up from 1 to 500.",
-    ]:
-        print("Instruction:", instruction)
-        print("Response:", evaluate(instruction))
-        print()
+    # # testing code for readme
+    # for instruction in [
+    #     "What is im8?",
+    #     "What is the difference between confidential and confidential (cloud eligible)?",
+    #     "What is the security classification of analytics.gov?"
+    #     # "Tell me about alpacas.",
+    #     # "Tell me about the president of Mexico in 2019.",
+    #     # "Tell me about the king of France in 2019.",
+    #     # "List all Canadian provinces in alphabetical order.",
+    #     # "Write a Python program that prints the first 10 Fibonacci numbers.",
+    #     # "Write a program that prints the numbers from 1 to 100. But for multiples of three print 'Fizz' instead of the number and for the multiples of five print 'Buzz'. For numbers which are multiples of both three and five print 'FizzBuzz'.",  # noqa: E501
+    #     # "Tell me five words that rhyme with 'shock'.",
+    #     # "Translate the sentence 'I have no mouth but I must scream' into Spanish.",
+    #     # "Count up from 1 to 500.",
+    # ]:
+    #     print("Instruction:", instruction)
+    #     print("Response:", evaluate(instruction))
+    #     print()
 
 
 if __name__ == "__main__":

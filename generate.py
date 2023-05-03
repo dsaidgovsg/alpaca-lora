@@ -3,21 +3,10 @@ import sys
 
 import fire
 import gradio as gr
-<<<<<<< HEAD
-import logging
-# logging.basicConfig(filename='output.log', encoding='utf-8', level=logging.DEBUG)
-logging.basicConfig(handlers=[logging.FileHandler(filename="./output.log", 
-                                                 encoding='utf-8', mode='a+')],
-                    format="%(asctime)s %(name)s:%(levelname)s:%(message)s", 
-                    datefmt="%F %A %T", 
-                    level=logging.DEBUG)
-
-=======
 import torch
 import transformers
 from peft import PeftModel
 from transformers import GenerationConfig, LlamaForCausalLM, LlamaTokenizer
->>>>>>> 9de612e582ab86013b5d1c3be6b0ed9f5ab2065a
 
 from utils.prompter import Prompter
 
@@ -34,9 +23,11 @@ except:  # noqa: E722
 
 
 def main(
-    load_8bit: bool = False,
+    # load_8bit: bool = False,
+    load_8bit: bool = True,
     base_model: str = "",
-    lora_weights: str = "tloen/alpaca-lora-7b",
+    # lora_weights: str = "tloen/alpaca-lora-7b",
+    lora_weights: str = "./lora-alpaca-im8-clauses",
     prompt_template: str = "",  # The prompt template to use, will default to alpaca.
     server_name: str = "0.0.0.0",  # Allows to listen on all interfaces by providing '0.
     share_gradio: bool = False,
@@ -96,48 +87,13 @@ def main(
 
     def evaluate(
         instruction,
-        input_text=None,
+        input=None,
         temperature=0.1,
         top_p=0.75,
         top_k=40,
         num_beams=4,
         max_new_tokens=128,
         **kwargs,
-<<<<<<< HEAD
-):
-    prompt = generate_prompt(instruction, input_text)
-    inputs = tokenizer(prompt, return_tensors="pt")
-    input_ids = inputs["input_ids"].cuda()
-    generation_config = GenerationConfig(
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        num_beams=num_beams,
-        **kwargs,
-    )
-    with torch.no_grad():
-        generation_output = model.generate(
-            input_ids=input_ids,
-            generation_config=generation_config,
-            return_dict_in_generate=True,
-            output_scores=True,
-            # max_new_tokens=2048,
-            max_new_tokens=1024
-        )
-    s = generation_output.sequences[0]
-    output = tokenizer.decode(s)
-    
-    log_output = 'Prompt: ' + str(prompt) + \
-    '------------------------------------------------\n\n' + \
-    'Input: ' + str(input_text) + \
-    '------------------------------------------------\n\n' + \
-    'Output: ' + str(output) + \
-    '------------------------------------------------\n\n'
-    
-    logging.debug(log_output)
-    print(log_output)
-    return output.split("### Response:")[1].strip()
-=======
     ):
         prompt = prompter.generate_prompt(instruction, input)
         inputs = tokenizer(prompt, return_tensors="pt")
@@ -160,7 +116,6 @@ def main(
         s = generation_output.sequences[0]
         output = tokenizer.decode(s)
         return prompter.get_response(output)
->>>>>>> 9de612e582ab86013b5d1c3be6b0ed9f5ab2065a
 
     gr.Interface(
         fn=evaluate,
@@ -198,38 +153,7 @@ def main(
     ).launch(server_name="0.0.0.0", share=share_gradio)
     # Old testing code follows.
 
-<<<<<<< HEAD
-gr.Interface(
-    fn=evaluate,
-    inputs=[
-        gr.components.Textbox(
-            lines=2, label="Instruction", value="Answer the following question using the context. If you don't know, say I don't know. Context: \"Watson is a data scientist from GovTech Singapore. He works in the Data Science and Artificial Intelligence Division, specialising in NLP.\""
-        ),
-        gr.components.Textbox(
-            lines=2, label="Input", value="Question: \"Where does Watson work in?\""
-        ),
-        gr.components.Slider(minimum=0, maximum=1, value=0.1, label="Temperature"),
-        gr.components.Slider(minimum=0, maximum=1, value=0.75, label="Top p"),
-        gr.components.Slider(minimum=0, maximum=100, step=1, value=40, label="Top k"),
-        gr.components.Slider(minimum=0, maximum=4, step=1, value=4, label="Beams"),
-    ],
-    outputs=[
-        gr.inputs.Textbox(
-            lines=5,
-            label="Output",
-        )
-    ],
-    title="DSAID's 🦙🌲 Alpaca-LoRA",
-    description="This is DSAID's implementation of Alpaca-LoRA. Alpaca-LoRA is a 7B-parameter LLaMA model finetuned to follow instructions. It is trained on the [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) dataset and makes use of the Huggingface LLaMA implementation.",
-).launch(share=True, server_name="0.0.0.0")
-
-# Old testing code follows.
-
-"""
-if __name__ == "__main__":
-=======
     """
->>>>>>> 9de612e582ab86013b5d1c3be6b0ed9f5ab2065a
     # testing code for readme
     for instruction in [
         "Tell me about alpacas.",
